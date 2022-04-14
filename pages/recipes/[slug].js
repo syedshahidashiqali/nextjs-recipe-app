@@ -24,7 +24,14 @@ const recipeQuery = `*[_type == "recipe" && slug.current == $slug][0]{
   likes
 }`
 
-export default function OneRecipe({ data }) {
+export default function OneRecipe({ data, preview }) {
+  if(!data) return "Loading"
+  const { data: recipe } = usePreviewSubscription(recipeQuery, {
+    params: { slug: data.recipe?.slug.current },
+    initialData: data,
+    enabled: preview,
+  });
+  // console.log(30,recipe?.ingredient)
   const [likes, setLikes] = useState(data?.recipe?.likes)
   const addLike = async () => {
     const res = await fetch("/api/handle-like", {
@@ -35,7 +42,7 @@ export default function OneRecipe({ data }) {
     const data = await res.json()
     setLikes(data.likes)
   }
-  const { recipe } = data
+  // const { recipe } = data
   return (
     <article className="recipe">
       <h1>{recipe.name}</h1>
@@ -46,18 +53,19 @@ export default function OneRecipe({ data }) {
         <img src={urlFor(recipe?.mainImage).url()} alt={recipe.name} />
         <div className="breakdown">
           <ul className="ingredients">
-            {recipe?.ingredient.map(ingredient => (
-              <li key={ingredient._key} className="ingredient">
-                {ingredient?.wholeNumber}
-                {ingredient?.fraction}
-                {" "}
-                {ingredient?.unit}
-                <br />
-                {ingredient?.ingredient?.name}
-              </li>
+            {recipe?.ingredient?.map(ingredient => (
+              console.log(ingredient)
+              // <li key={ingredient._key} className="ingredient">
+              //   {ingredient?.wholeNumber}
+              //   {ingredient?.fraction}
+              //   {" "}
+              //   {ingredient?.unit}
+              //   <br />
+              //   {ingredient?.ingredient?.name}
+              // </li>
             ))}
           </ul>
-          <PortableText blocks={recipe?.instructions} className="instructions"/>
+          {/* <PortableText blocks={recipe?.instructions} className="instructions"/> */}
         </div>
       </main>
     </article>
@@ -84,6 +92,7 @@ export async function getStaticProps({ params }){
     props: {
       data: {
         recipe,
+        preview: true,
       }
     }
   }
